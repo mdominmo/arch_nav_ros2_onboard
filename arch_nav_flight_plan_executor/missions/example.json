@@ -1,0 +1,33 @@
+{
+  "operations": [
+    {
+      "takeoff": {
+        "height": 10.0,
+        "frame": "LOCAL_NED"
+      }
+    },
+    {
+      "change_yaw": {
+        "yaw_rad": 6.283185307179586,
+        "frame": "BODY_FCS"
+      }
+    },
+    {
+      "waypoints": [
+        { "latitude": 52.11495, "longitude": -6.61300, "altitude": 12.0 },
+        { "latitude": 52.11495, "longitude": -6.61285, "altitude": 12.0 },
+        { "latitude": 52.11486, "longitude": -6.61285, "altitude": 12.0 },
+        { "latitude": 52.11486, "longitude": -6.61300, "altitude": 12.0 }
+      ]
+    },
+    {
+      "change_yaw": {
+        "yaw_rad": 6.283185307179586,
+        "frame": "BODY_FCS"
+      }
+    },
+    {
+      "land": {}
+    }
+  ]
+}

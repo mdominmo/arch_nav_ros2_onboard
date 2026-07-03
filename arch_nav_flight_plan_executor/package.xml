@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>arch_nav_flight_plan_executor</name>
+  <version>0.0.1</version>
+  <description>
+    ROS 2 node that executes arch-nav flight plans dispatched dynamically over
+    a ROS 2 action, one instance per UAV. Structurally modeled on
+    arch_nav_json_flight_plan but with no dependency on it: missions are
+    received at runtime via the ExecuteFlightPlan action instead of a static
+    file parameter, and live telemetry/progress is published over ROS 2.
+  </description>
+  <maintainer email="mandominguez97@gmail.com">Manuel Dominguez Montero</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>arch_nav_gcs_interfaces</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
