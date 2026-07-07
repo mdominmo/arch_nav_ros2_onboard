@@ -26,7 +26,7 @@ FlightPlanExecutorNode::FlightPlanExecutorNode(arch_nav::ArchNavApi& api)
 
   action_server_ = rclcpp_action::create_server<ExecuteFlightPlan>(
       this,
-      "execute_flight_plan",
+      "~/execute_flight_plan",
       [this](const rclcpp_action::GoalUUID& uuid, std::shared_ptr<const ExecuteFlightPlan::Goal> goal) {
         return handle_goal(uuid, goal);
       },
@@ -38,7 +38,7 @@ FlightPlanExecutorNode::FlightPlanExecutorNode(arch_nav::ArchNavApi& api)
       });
 
   telemetry_pub_ = create_publisher<arch_nav_gcs_interfaces::msg::VehicleTelemetry>(
-      "telemetry", rclcpp::QoS(5));
+      "~/telemetry", rclcpp::QoS(5));
 
   const double rate_hz = get_parameter("telemetry_rate_hz").as_double();
   const auto period = std::chrono::duration<double>(1.0 / rate_hz);
