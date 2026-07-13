@@ -177,7 +177,6 @@ uint8_t FlightPlanExecutorNode::executor_state_to_wire(FlightPlanExecutor::Step 
 
 void FlightPlanExecutorNode::publish_telemetry()
 {
-  RCLCPP_INFO(get_logger(), "DEBUG: publish_telemetry tick");  // TEMPORARY - remove after diagnosis
   const auto pos = api_.global_position();
   const auto kin = api_.kinematics();
   const auto status = api_.vehicle_status();

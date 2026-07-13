@@ -63,6 +63,7 @@ bool FlightPlanExecutor::start(
   executing_op_index_ = 0;
   completed_count_ = 0;
   cancel_requested_ = false;
+  waiting_for_operation_abort_ = false;
   on_progress_ = std::move(on_progress);
   on_complete_ = std::move(on_complete);
 
@@ -87,9 +88,20 @@ void FlightPlanExecutor::request_cancel()
   if (step_ == Step::WAITING_OPERATION_COMPLETE) {
     RCLCPP_INFO(node_.get_logger(), "Cancel requested - aborting running operation");
     api_.cancel_operation();
+    waiting_for_operation_abort_ = true;
     step_ = Step::CANCELING;
   } else if (step_ != Step::CANCELING) {
-    finish(false, "canceled");
+    // No operation is actually running yet (still WAITING_ARM/ARMING/
+    // WAITING_IDLE_TO_START_OP) - nothing to abort. Deliberately do NOT
+    // call finish() synchronously here: this method runs inside the ROS 2
+    // action server's handle_cancel callback, and the goal handle is only
+    // safe to move to a terminal state (canceled()) *after* handle_cancel()
+    // returns and the rclcpp_action framework has transitioned the goal out
+    // of EXECUTING into CANCELING. Finishing synchronously raced that and
+    // crashed the node ("invalid transition from state EXECUTING with
+    // event CANCELED"). on_tick() resolves it one tick later instead.
+    waiting_for_operation_abort_ = false;
+    step_ = Step::CANCELING;
   }
 }
 
@@ -186,6 +198,12 @@ void FlightPlanExecutor::on_tick()
         RCLCPP_INFO(node_.get_logger(), "Vehicle connected - arming");
         api_.arm();
         step_ = Step::ARMING;
+      } else if (status == OperationStatus::IDLE) {
+        // Vehicle is already armed and idle (e.g. a prior standalone
+        // takeoff command left it airborne) - nothing to arm, go straight
+        // to starting this plan's first operation.
+        RCLCPP_INFO(node_.get_logger(), "Vehicle already armed - starting flight plan operations");
+        step_ = Step::WAITING_IDLE_TO_START_OP;
       }
       break;
 
@@ -202,8 +220,19 @@ void FlightPlanExecutor::on_tick()
       }
       break;
 
-    case Step::WAITING_OPERATION_COMPLETE:
     case Step::CANCELING:
+      // If an operation was actually running, wait for its real abort to
+      // come back through on_operation_complete() instead of finishing
+      // here. Otherwise (canceled while still WAITING_ARM/ARMING/
+      // WAITING_IDLE_TO_START_OP, nothing to abort) finish now - one tick
+      // after request_cancel() returned, so it's safely outside the
+      // handle_cancel callback that requested it.
+      if (!waiting_for_operation_abort_) {
+        finish(false, "canceled");
+      }
+      break;
+
+    case Step::WAITING_OPERATION_COMPLETE:
     case Step::IDLE:
     case Step::DONE:
       break;
