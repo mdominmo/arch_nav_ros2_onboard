@@ -62,6 +62,7 @@ class FlightPlanExecutor {
   std::size_t completed_count_{0};
   bool cancel_requested_{false};
   bool waiting_for_operation_abort_{false};
+  bool cancel_operation_pending_{false};
   ProgressCallback on_progress_;
   CompletionCallback on_complete_;
   rclcpp::TimerBase::SharedPtr timer_;

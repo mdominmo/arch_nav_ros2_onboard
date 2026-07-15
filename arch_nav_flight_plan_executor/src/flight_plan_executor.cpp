@@ -64,6 +64,7 @@ bool FlightPlanExecutor::start(
   completed_count_ = 0;
   cancel_requested_ = false;
   waiting_for_operation_abort_ = false;
+  cancel_operation_pending_ = false;
   on_progress_ = std::move(on_progress);
   on_complete_ = std::move(on_complete);
 
@@ -85,22 +86,30 @@ void FlightPlanExecutor::request_cancel()
 
   cancel_requested_ = true;
 
-  if (step_ == Step::WAITING_OPERATION_COMPLETE) {
-    RCLCPP_INFO(node_.get_logger(), "Cancel requested - aborting running operation");
-    api_.cancel_operation();
-    waiting_for_operation_abort_ = true;
-    step_ = Step::CANCELING;
-  } else if (step_ != Step::CANCELING) {
-    // No operation is actually running yet (still WAITING_ARM/ARMING/
-    // WAITING_IDLE_TO_START_OP) - nothing to abort. Deliberately do NOT
-    // call finish() synchronously here: this method runs inside the ROS 2
-    // action server's handle_cancel callback, and the goal handle is only
-    // safe to move to a terminal state (canceled()) *after* handle_cancel()
-    // returns and the rclcpp_action framework has transitioned the goal out
-    // of EXECUTING into CANCELING. Finishing synchronously raced that and
-    // crashed the node ("invalid transition from state EXECUTING with
-    // event CANCELED"). on_tick() resolves it one tick later instead.
-    waiting_for_operation_abort_ = false;
+  if (step_ != Step::CANCELING) {
+    // This method runs inside the ROS 2 action server's handle_cancel
+    // callback. rclcpp_action only transitions the real goal handle from
+    // EXECUTING to CANCELING *after* handle_cancel() returns - so nothing
+    // reachable from here may finish the goal (canceled()/succeed()/
+    // abort()) synchronously, or it races that transition and crashes the
+    // node ("invalid transition from state EXECUTING with event ...").
+    // That rules out calling api_.cancel_operation() here too: some
+    // operations (e.g. takeoff) can complete synchronously as a direct
+    // result of that call, which would call finish() -> the completion
+    // callback -> goal_handle->canceled() before handle_cancel() has even
+    // returned. So only record intent here; on_tick() does the actual work
+    // one tick later, safely outside this callback.
+    if (step_ == Step::WAITING_OPERATION_COMPLETE) {
+      RCLCPP_INFO(node_.get_logger(), "Cancel requested - aborting running operation");
+      waiting_for_operation_abort_ = true;
+      cancel_operation_pending_ = true;
+    } else {
+      // Nothing is actually running yet (still WAITING_ARM/ARMING/
+      // WAITING_IDLE_TO_START_OP) - nothing to abort, on_tick() will finish
+      // the plan directly next tick.
+      waiting_for_operation_abort_ = false;
+      cancel_operation_pending_ = false;
+    }
     step_ = Step::CANCELING;
   }
 }
@@ -221,13 +230,18 @@ void FlightPlanExecutor::on_tick()
       break;
 
     case Step::CANCELING:
-      // If an operation was actually running, wait for its real abort to
-      // come back through on_operation_complete() instead of finishing
-      // here. Otherwise (canceled while still WAITING_ARM/ARMING/
-      // WAITING_IDLE_TO_START_OP, nothing to abort) finish now - one tick
-      // after request_cancel() returned, so it's safely outside the
-      // handle_cancel callback that requested it.
-      if (!waiting_for_operation_abort_) {
+      // One tick after request_cancel() returned, so we're safely outside
+      // the handle_cancel callback that requested it (see the comment
+      // there for why that matters).
+      if (cancel_operation_pending_) {
+        cancel_operation_pending_ = false;
+        api_.cancel_operation();
+      } else if (!waiting_for_operation_abort_) {
+        // Nothing was running - finish now. If something was running,
+        // cancel_operation_pending_ took care of aborting it above (this
+        // same tick or an earlier one) and we wait for the real abort to
+        // come back through on_operation_complete() instead of finishing
+        // here.
         finish(false, "canceled");
       }
       break;
