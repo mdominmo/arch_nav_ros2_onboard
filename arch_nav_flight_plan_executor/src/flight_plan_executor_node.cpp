@@ -37,7 +37,7 @@ FlightPlanExecutorNode::FlightPlanExecutorNode(arch_nav::ArchNavApi& api)
         handle_accepted(goal_handle);
       });
 
-  telemetry_pub_ = create_publisher<arch_nav_gcs_interfaces::msg::VehicleTelemetry>(
+  telemetry_pub_ = create_publisher<arch_nav_ros2_interfaces::msg::VehicleTelemetry>(
       "~/telemetry", rclcpp::QoS(5));
 
   const double rate_hz = get_parameter("telemetry_rate_hz").as_double();
@@ -181,7 +181,7 @@ void FlightPlanExecutorNode::publish_telemetry()
   const auto kin = api_.kinematics();
   const auto status = api_.vehicle_status();
 
-  arch_nav_gcs_interfaces::msg::VehicleTelemetry msg;
+  arch_nav_ros2_interfaces::msg::VehicleTelemetry msg;
   msg.header.stamp = now();
   msg.vehicle_id = vehicle_id_;
 

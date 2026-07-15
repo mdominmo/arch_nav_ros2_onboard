@@ -8,7 +8,7 @@ ROS 2 onboard packages for `arch_nav_gcs` — the per-UAV side of the ground con
 
 ## Dependencies
 
-Depends on `arch_nav_gcs_interfaces` (the ROS 2 msg/action definitions) as a **colcon workspace sibling** — it's owned by the [`arch_nav_ros2_interfaces`](../arch_nav_ros2_interfaces) repo (which `arch_nav_gcs`'s `gcs_backend` also depends on), not by this repo. All three repos must be checked out side by side under the same `arch_nav_ws/src/` for a colcon build to resolve it, exactly like `arch_nav_mavsdk_px4_driver` depends on `arch_nav` today.
+Depends on `arch_nav_ros2_interfaces` (the ROS 2 msg/action definitions) as a **colcon workspace sibling** — it's owned by the [`arch_nav_ros2_interfaces`](../arch_nav_ros2_interfaces) repo (which `arch_nav_gcs`'s `gcs_backend` also depends on), not by this repo. All three repos must be checked out side by side under the same `arch_nav_ws/src/` for a colcon build to resolve it, exactly like `arch_nav_mavsdk_px4_driver` depends on `arch_nav` today.
 
 Also depends on the `arch_nav` kernel (`find_package(arch_nav CONFIG REQUIRED)`, installed system-wide — see [`arch_nav`](../arch_nav)'s build instructions) and a MAVSDK driver (`arch_nav_mavsdk_px4_driver` or `arch_nav_mavsdk_ardupilot_driver`) loaded dynamically at runtime via `ARCH_NAV_DRIVER`.
 
@@ -18,7 +18,7 @@ See `arch_nav_gcs/docs/topics.md` for the full ROS 2 naming convention, the JSON
 
 ```bash
 source /opt/ros/humble/setup.bash
-colcon build --packages-select arch_nav_gcs_interfaces arch_nav_flight_plan_executor
+colcon build --packages-select arch_nav_ros2_interfaces arch_nav_flight_plan_executor
 ```
 
 (run from `arch_nav_ws/`, so colcon can see both this repo and `arch_nav_ros2_interfaces` under `src/`)

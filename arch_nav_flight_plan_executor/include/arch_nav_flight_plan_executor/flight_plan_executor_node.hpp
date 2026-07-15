@@ -9,14 +9,14 @@
 
 #include "arch_nav/arch_nav_api.hpp"
 #include "arch_nav_flight_plan_executor/flight_plan_executor.hpp"
-#include "arch_nav_gcs_interfaces/action/execute_flight_plan.hpp"
-#include "arch_nav_gcs_interfaces/msg/vehicle_telemetry.hpp"
+#include "arch_nav_ros2_interfaces/action/execute_flight_plan.hpp"
+#include "arch_nav_ros2_interfaces/msg/vehicle_telemetry.hpp"
 
 namespace arch_nav_flight_plan_executor {
 
 class FlightPlanExecutorNode : public rclcpp::Node {
  public:
-  using ExecuteFlightPlan = arch_nav_gcs_interfaces::action::ExecuteFlightPlan;
+  using ExecuteFlightPlan = arch_nav_ros2_interfaces::action::ExecuteFlightPlan;
   using GoalHandle = rclcpp_action::ServerGoalHandle<ExecuteFlightPlan>;
 
   explicit FlightPlanExecutorNode(arch_nav::ArchNavApi& api);
@@ -40,7 +40,7 @@ class FlightPlanExecutorNode : public rclcpp::Node {
   std::string active_mission_id_;
 
   rclcpp_action::Server<ExecuteFlightPlan>::SharedPtr action_server_;
-  rclcpp::Publisher<arch_nav_gcs_interfaces::msg::VehicleTelemetry>::SharedPtr telemetry_pub_;
+  rclcpp::Publisher<arch_nav_ros2_interfaces::msg::VehicleTelemetry>::SharedPtr telemetry_pub_;
   rclcpp::TimerBase::SharedPtr telemetry_timer_;
 };
 

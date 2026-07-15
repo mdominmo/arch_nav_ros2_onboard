@@ -9,7 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(arch_nav CONFIG REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
-find_package(arch_nav_gcs_interfaces REQUIRED)
+find_package(arch_nav_ros2_interfaces REQUIRED)
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
   include(FetchContent)
@@ -33,7 +33,7 @@ target_include_directories(arch_nav_flight_plan_executor PRIVATE
 ament_target_dependencies(arch_nav_flight_plan_executor
   rclcpp
   rclcpp_action
-  arch_nav_gcs_interfaces
+  arch_nav_ros2_interfaces
 )
 
 target_link_libraries(arch_nav_flight_plan_executor
