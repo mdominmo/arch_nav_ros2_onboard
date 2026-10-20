@@ -36,6 +36,11 @@ int main(int argc, char* argv[])
         arch_nav->api());
 
     rclcpp::spin(node);
+    RCLCPP_WARN(bootstrap->get_logger(), "rclcpp::spin() returned - destroying node and ArchNav...");
+    node.reset();
+    RCLCPP_WARN(bootstrap->get_logger(), "node destroyed - destroying ArchNav...");
+    arch_nav.reset();
+    RCLCPP_WARN(bootstrap->get_logger(), "ArchNav destroyed");
   } catch (const std::exception& e) {
     RCLCPP_FATAL(bootstrap->get_logger(), "Startup failed: %s", e.what());
     rclcpp::shutdown();
